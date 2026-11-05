@@ -1,0 +1,21 @@
+{
+  "name": "automacao-playwright-qa",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "allowScripts": [
+    "@playwright/test",
+    "playwright"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "dotenv": "^18.0.9"
+  }
+}
