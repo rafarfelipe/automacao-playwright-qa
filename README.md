@@ -13,6 +13,9 @@ Page Object Model.
   <img src="https://img.shields.io/badge/JavaScript-CommonJS-F7DF1E?logo=javascript&logoColor=black" alt="JavaScript">
   <img src="https://img.shields.io/badge/Testes-E2E-6C47FF" alt="Testes end-to-end">
   <img src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white" alt="GitHub Actions">
+  <a href="https://github.com/rafarfelipe/automacao-playwright-qa/actions/workflows/playwright.yml">
+    <img src="https://github.com/rafarfelipe/automacao-playwright-qa/actions/workflows/playwright.yml/badge.svg" alt="Playwright Tests">
+  </a>
 </p>
 
 </div>
