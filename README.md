@@ -2,8 +2,9 @@
 
 # Automação E2E com Playwright
 
-Suíte de testes end-to-end para validar os principais fluxos da aplicação
-[SauceDemo](https://www.saucedemo.com/), utilizando Playwright Test e o padrão
+Suíte de testes automatizados para validar fluxos da aplicação
+[SauceDemo](https://www.saucedemo.com/), APIs REST e diferentes recursos de
+interação web, utilizando Playwright Test, fixtures customizadas e o padrão
 Page Object Model.
 
 <p>
@@ -18,15 +19,23 @@ Page Object Model.
 
 ## Sobre o projeto
 
-Este projeto automatiza jornadas essenciais de uma loja virtual de demonstração,
-com foco em confiabilidade, reutilização de código e execução multiplataforma.
+Este projeto reúne testes end-to-end de interface, testes de API e desafios
+práticos de automação, com foco em confiabilidade, reutilização de código e
+execução multiplataforma.
 
 Os testes utilizam:
 
 - **Playwright Test** para automação e asserções;
 - **Page Object Model** para encapsular locators e ações de cada tela;
 - **Testes parametrizados** para validar diferentes perfis de usuário;
+- **Fixtures customizadas** para disponibilizar Page Objects nos testes;
 - **Storage state** para reutilizar uma sessão autenticada no fluxo de compra;
+- **APIRequest** para validar operações HTTP;
+- **Mocks de rede** para simular indisponibilidade e respostas vazias;
+- **Tags de execução** para separar testes smoke;
+- **Asserções soft** e **testes de regressão visual**;
+- **Interações avançadas** como upload, alertas, iframes, novas abas, hover e
+  drag and drop;
 - **Relatório HTML**, screenshots, vídeos e traces para facilitar a análise de falhas;
 - **GitHub Actions** para execução automática em push e pull request.
 
@@ -41,17 +50,67 @@ Os testes utilizam:
 
 ### Compra
 
-- Adição da mochila ao carrinho;
-- Validação do item no carrinho;
-- Preenchimento dos dados de entrega;
+- Adição da **Sauce Labs Backpack** ao carrinho;
+- Validação do contador do carrinho;
+- Validação da mochila no carrinho;
+- Preenchimento de nome, sobrenome e código postal;
 - Finalização da compra;
-- Validação da mensagem de confirmação do pedido.
+- Validação da mensagem `Thank you for your order!`.
+
+O cenário de compra reutiliza o estado de autenticação gerado pelo setup e
+divide a jornada em etapas nomeadas no relatório HTML:
+
+1. Adicionar a mochila ao carrinho;
+2. Abrir o carrinho;
+3. Preencher os dados de entrega;
+4. Finalizar a compra.
+
+### Desafios da aplicação
+
+- Login com senha inválida;
+- Validação de campos obrigatórios;
+- Remoção de produto do carrinho;
+- Ordenação de produtos pelo menor preço;
+- Logout;
+- Compra de dois produtos com validação do total de `$43.18`.
+
+### Testes de API
+
+Utilizando a API pública [JSONPlaceholder](https://jsonplaceholder.typicode.com/):
+
+- Consulta de um post com `GET`;
+- Criação de um post com `POST`;
+- Exclusão de um post com `DELETE`.
+
+### Interações web
+
+Utilizando o site [The Internet](https://the-internet.herokuapp.com/):
+
+- Seleção e desmarcação de checkbox;
+- Seleção de opções em dropdown;
+- Upload de arquivo;
+- Aceite de alerta JavaScript;
+- Abertura e validação de nova aba;
+- Validação de conteúdo em iframe;
+- Exibição de conteúdo com hover;
+- Arrastar e soltar elementos;
+- Consulta de dados em tabela.
+
+### Recursos avançados do Playwright
+
+- Fixture `loginPage` para reutilizar o Page Object de login;
+- Fixture `produtosPage` para reutilizar o Page Object de produtos;
+- Testes orientados a dados com `dados/usuarios.json`;
+- Simulação de falha do endpoint e lista vazia com `page.route`;
+- Repetição de cenários para investigação de flakiness;
+- Teste visual com `toHaveScreenshot`;
+- Teste smoke identificado com a tag `@smoke`.
 
 ## Tecnologias
 
 | Tecnologia | Uso |
 | --- | --- |
-| [Playwright](https://playwright.dev/) | Automação de navegador e execução dos testes |
+| [Playwright](https://playwright.dev/) | Automação de navegador, API e execução dos testes |
 | [Node.js](https://nodejs.org/) | Runtime do projeto |
 | JavaScript | Implementação dos testes e Page Objects |
 | [dotenv](https://www.npmjs.com/package/dotenv) | Carregamento das variáveis de ambiente |
@@ -61,7 +120,9 @@ Os testes utilizam:
 
 - Node.js em versão LTS;
 - npm;
-- Credenciais de teste da SauceDemo.
+- Credenciais de teste da SauceDemo;
+- Acesso à internet para os testes que utilizam SauceDemo, JSONPlaceholder,
+  The Internet e a lojinha usada nos testes de mock/visual.
 
 ## Instalação
 
@@ -79,6 +140,7 @@ Crie o arquivo `.env` na raiz do projeto, baseado no exemplo:
 ```env
 SAUCE_USER=standard_user
 SAUCE_PASSWORD=sua_senha_de_teste
+BASE_URL=https://www.saucedemo.com/
 ```
 
 > O arquivo `.env` e o estado de autenticação são ignorados pelo Git. Nunca
@@ -110,6 +172,30 @@ Executar um arquivo específico:
 npx playwright test tests/login.spec.js
 ```
 
+Executar somente os testes smoke:
+
+```bash
+npx playwright test --grep @smoke
+```
+
+Repetir um teste para investigar flakiness:
+
+```bash
+npx playwright test tests/nivel2/flaky.spec.js --repeat-each=10 --project=chromium
+```
+
+Listar os testes descobertos sem executá-los:
+
+```bash
+npx playwright test --list --project=chromium
+```
+
+Atualizar o baseline de teste visual:
+
+```bash
+npx playwright test tests/nivel2/visual.spec.js --update-snapshots
+```
+
 Executar em um projeto específico:
 
 ```bash
@@ -131,6 +217,10 @@ A configuração executa os testes nos seguintes projetos:
 O fluxo de compra depende do projeto de autenticação (`setup`), que gera o
 arquivo `playwright/.auth/usuario.json` antes da execução dos testes dependentes.
 
+O teste visual usa `ignoreSnapshots: true` quando executado em CI. Dessa forma,
+o restante da suíte continua sendo executado sem exigir um baseline visual
+específico no ambiente de integração contínua.
+
 ## Estrutura do projeto
 
 ```text
@@ -142,11 +232,28 @@ arquivo `playwright/.auth/usuario.json` antes da execução dos testes dependent
 │   ├── CheckoutPage.js
 │   ├── LoginPage.js
 │   └── ProdutosPage.js
+├── fixtures/
+│   └── paginas.js               # Fixtures com Page Objects reutilizáveis
+├── dados/
+│   └── usuarios.json            # Massa do teste de login orientado a dados
 ├── tests/                       # Cenários automatizados
 │   ├── auth.setup.js
-│   ├── compra.spec.js
+│   ├── compra.spec.js           # Compra ponta a ponta com etapas nomeadas
+│   ├── api.spec.js              # Testes REST com JSONPlaceholder
+│   ├── desafios.spec.js         # Desafios funcionais da SauceDemo
+│   ├── internet.spec.js         # Interações no The Internet
 │   ├── login.spec.js
-│   └── usuarios.spec.js
+│   ├── usuarios.spec.js
+│   └── nivel2/
+│       ├── dados.spec.js        # Testes orientados a dados
+│       ├── fixture.spec.js      # Uso de fixture customizada
+│       ├── flaky.spec.js        # Cenário de usuário lento
+│       ├── mock.spec.js         # Mock de respostas de rede
+│       ├── soft.spec.js         # Asserções não bloqueantes
+│       ├── tags.spec.js         # Testes com tags
+│       └── visual.spec.js       # Regressão visual
+├── arquivos/
+│   └── exemplo.txt              # Arquivo usado no teste de upload
 ├── .env.example                 # Modelo de variáveis de ambiente
 ├── package.json
 └── playwright.config.js         # Configuração global do Playwright
@@ -160,9 +267,11 @@ Em caso de falha, o Playwright pode gerar:
 - resultados de teste em `test-results/`;
 - screenshot somente em falhas;
 - vídeo em falhas;
-- trace na primeira tentativa novamente.
+- trace na primeira nova tentativa após uma falha.
 
 Esses diretórios são gerados localmente e não são versionados.
+O baseline visual deve ser criado ou atualizado localmente antes de validar o
+teste `visual.spec.js`.
 
 ## Integração contínua
 
@@ -185,6 +294,8 @@ As credenciais devem ser configuradas como secrets do repositório:
 - Separação entre ações de tela e cenários de teste;
 - Reutilização de autenticação com `storageState`;
 - Asserções explícitas para validar resultados observáveis;
+- Fixtures e dados separados para reduzir duplicação;
+- Mocks de rede para validar estados de erro sem depender do backend;
 - Execução em múltiplos navegadores e dispositivo móvel;
 - Evidências automáticas para investigação de falhas.
 

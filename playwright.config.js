@@ -10,9 +10,10 @@ module.exports = defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
+  ignoreSnapshots: !!process.env.CI,
   reporter: 'html',
   use: {
-    baseURL: 'https://www.saucedemo.com/',
+    baseURL: process.env.BASE_URL || 'https://www.saucedemo.com/',
     testIdAttribute: 'data-test',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
